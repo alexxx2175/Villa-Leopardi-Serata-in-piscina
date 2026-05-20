@@ -5,8 +5,11 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Camera, Calendar, MapPin, Music, Sunset, Star, ChevronDown, Instagram, Mail, Phone, Users, X, Globe } from "lucide-react";
+import { Camera, Calendar, MapPin, Music, Sunset, Star, ChevronDown, Instagram, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
 import droneImage from "./assets/images/regenerated_image_1779188638766.png";
+import GmailConsole from "./components/GmailConsole";
+import { getAccessToken } from "./lib/firebase";
+import { sendGmailMessage } from "./services/gmail";
 
 const IMAGES = {
   hero: "/hero.png",
@@ -75,6 +78,7 @@ const TRANSLATIONS = {
       gallery: "Galleria",
       booking: "Prenota",
       reservations: "Prenotazioni",
+      gmail: "Console Gmail"
     },
     hero: {
       subtitle: "Leopardi Signature Events",
@@ -152,6 +156,7 @@ const TRANSLATIONS = {
       gallery: "Gallery",
       booking: "Book",
       reservations: "Reservations",
+      gmail: "Gmail Console"
     },
     hero: {
       subtitle: "Leopardi Signature Events",
@@ -229,6 +234,7 @@ const TRANSLATIONS = {
       gallery: "Galerie",
       booking: "Buchen",
       reservations: "Reservierungen",
+      gmail: "Gmail-Zentrale"
     },
     hero: {
       subtitle: "Leopardi Signature Events",
@@ -305,6 +311,7 @@ const TRANSLATIONS = {
 export default function App() {
   const [lang, setLang] = useState<Language>("IT");
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isGmailConsoleOpen, setIsGmailConsoleOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -331,6 +338,25 @@ export default function App() {
       });
 
       if (response.ok) {
+        // Trigger actual Gmail send if administrator is logged in through Google
+        const activeToken = getAccessToken();
+        if (activeToken) {
+          try {
+            const mailSubject = `Nuova prenotazione Sunset Table: ${formData.guests} ospiti - ${formData.name}`;
+            const mailMsg = `Richiesta Ricevuta!\n\nNome: ${formData.name}\nOspiti: ${formData.guests}\nTelefono: ${formData.phone}\nEmail: ${formData.email}\nMessaggio: ${formData.message || "Nessuno"}\n\nQuesta notifica è stata inviata automaticamente tramite l'API di Gmail di Villa Leopardi.`;
+            
+            // Send email to the hotel admin inbox and a copy to the guest!
+            await sendGmailMessage(activeToken, "zorziriccardo20@gmail.com", mailSubject, mailMsg);
+            if (formData.email) {
+              const guestSubject = "Villa Leopardi - Ricezione Richiesta Prenotazione";
+              const guestMsg = `Gentile ${formData.name},\n\nabbiamo ricevuto la tua richiesta di prenotazione per l'evento Sunset Table.\nIl nostro staff verificherà la disponibilità per ${formData.guests} persone e ti contatterà al più presto.\n\nDettagli della richiesta:\n- Telefono: ${formData.phone}\n- Note: ${formData.message || "Nessuna"}\n\nCordiali saluti,\nVilla Leopardi Staff`;
+              await sendGmailMessage(activeToken, formData.email, guestSubject, guestMsg);
+            }
+          } catch (gmailErr) {
+            console.error("Autosending email notifications via Gmail failed: ", gmailErr);
+          }
+        }
+
         setSubmitted(true);
         setTimeout(() => {
           setIsBookingOpen(false);
@@ -405,6 +431,15 @@ export default function App() {
               )}
             </AnimatePresence>
           </div>
+
+          <button 
+            onClick={() => setIsGmailConsoleOpen(true)}
+            title={T.nav.gmail}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-widest border border-brand-contrast/20 hover:bg-brand-primary/10 hover:border-brand-primary transition-all rounded"
+          >
+            <Lock size={11} className="text-brand-primary" />
+            <span className="font-bold">{T.nav.gmail}</span>
+          </button>
 
           <button 
             onClick={() => setIsBookingOpen(true)}
@@ -632,10 +667,6 @@ export default function App() {
           <div className="md:col-span-2">
             <div className="mb-8 flex items-center gap-6">
               <VillaLeopardiLogo isDarkBg={true} size="footer" />
-              <div className="border-l border-brand-neutral/15 pl-6 text-left">
-                <span className="text-[9px] uppercase tracking-[0.4em] font-light text-brand-accent/40 block">Villa</span>
-                <span className="text-xs uppercase tracking-[0.2em] font-light text-brand-accent block mt-1">Leopardi</span>
-              </div>
             </div>
             <p className="text-sm leading-loose max-w-sm font-light opacity-60">
               {T.footer.desc}
@@ -796,6 +827,7 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+      <GmailConsole isOpen={isGmailConsoleOpen} onClose={() => setIsGmailConsoleOpen(false)} />
     </div>
   );
 }
