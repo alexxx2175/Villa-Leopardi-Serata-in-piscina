@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Camera, Calendar, MapPin, Music, Sunset, Star, ChevronDown, Instagram, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
+import { LucideFacebook, Calendar, MapPin, Music, Sunset, Star, ChevronDown, LucideInstagram, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
 import droneImage from "./assets/images/regenerated_image_1779188638766.png";
 import GmailConsole from "./components/GmailConsole";
 import { getAccessToken } from "./lib/firebase";
@@ -129,7 +129,7 @@ const TRANSLATIONS = {
       social: "Connect",
       facebook: "Pagina Facebook",
       instagram: "Pagina Instagram",
-      copyright: "Copyright © 2025 Villa Leopardi."
+      copyright: "Copyright © 2026 Villa Leopardi."
     },
     modal: {
       badge: "Sunset Table 2026",
@@ -207,7 +207,7 @@ const TRANSLATIONS = {
       social: "Connect",
       facebook: "Facebook Page",
       instagram: "Instagram Page",
-      copyright: "Copyright © 2025 Villa Leopardi."
+      copyright: "Copyright © 2026 Villa Leopardi."
     },
     modal: {
       badge: "Sunset Table 2026",
@@ -251,7 +251,7 @@ const TRANSLATIONS = {
       menuTitle: "Abend",
       menuSerata: "menü",
       menuItems: [
-        "Auswahl an rohem Fisch kombiniert con einem Glas Champagne Pannier",
+        "Auswahl an rohem Fisch kombiniert mit einem Glas Champagne Pannier",
         "Meeresfrüchte-Risotto",
         "Finales Dessert"
       ],
@@ -285,7 +285,7 @@ const TRANSLATIONS = {
       social: "Connect",
       facebook: "Facebook-Seite",
       instagram: "Instagram-Seite",
-      copyright: "Copyright © 2025 Villa Leopardi."
+      copyright: "Copyright © 2026 Villa Leopardi."
     },
     modal: {
       badge: "Sunset Table 2026",
@@ -683,8 +683,8 @@ export default function App() {
           <div>
             <h5 className="text-[10px] uppercase tracking-widest font-bold text-brand-primary mb-6">{T.footer.social}</h5>
             <div className="space-y-3 text-xs font-light flex flex-col">
-              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><Instagram size={14} /> {T.footer.facebook}</a>
-              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><Instagram size={14} /> {T.footer.instagram}</a>
+              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><LucideFacebook size={14} /> {T.footer.facebook}</a>
+              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><LucideInstagram size={14} /> {T.footer.instagram}</a>
             </div>
           </div>
         </div>
@@ -773,7 +773,7 @@ export default function App() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">Telefono</label>
+                          <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">{T.modal.phone}</label>
                           <input 
                             type="tel" 
                             required
@@ -786,7 +786,7 @@ export default function App() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">Email</label>
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">{T.modal.email}</label>
                         <input 
                           type="email" 
                           required

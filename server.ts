@@ -30,13 +30,25 @@ const getTransporter = () => {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || "3000", 10);
 
   app.use(express.json());
 
   // API Route for Booking
   app.post("/api/book", async (req, res) => {
     const { name, guests, phone, email, message } = req.body;
+
+    // Input validation
+    if (!name || !guests || !phone || !email) {
+      return res.status(400).json({ success: false, message: "Campi obbligatori mancanti." });
+    }
+    if (typeof email !== "string" || !email.includes("@")) {
+      return res.status(400).json({ success: false, message: "Email non valida." });
+    }
+    const numGuests = parseInt(String(guests), 10);
+    if (isNaN(numGuests) || numGuests < 1 || numGuests > 50) {
+      return res.status(400).json({ success: false, message: "Numero di ospiti non valido (1-50)." });
+    }
 
     const adminTarget = process.env.ADMIN_EMAIL || "zorziriccardo20@gmail.com";
     const senderEmail = process.env.GMAIL_USER;
