@@ -5,15 +5,12 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { LucideFacebook, Calendar, MapPin, Music, Sunset, Star, ChevronDown, LucideInstagram, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
+import { Camera, Calendar, MapPin, Music, Sunset, Star, ChevronDown, Instagram, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
 import droneImage from "./assets/images/regenerated_image_1779188638766.png";
-import GmailConsole from "./components/GmailConsole";
-import { getAccessToken } from "./lib/firebase";
-import { sendGmailMessage } from "./services/gmail";
 
 const IMAGES = {
-  hero: "/hero.png",
-  aperitivo: "/aperitivo.png",
+  hero: "/chat_image.png",
+  aperitivo: "/ChatGPT Image 25 mag 2026, 19_11_43.png",
   poolSide: "/poolside.jpg",
   villa: "/villa.jpg",
   party: "/party.jpg",
@@ -77,8 +74,7 @@ const TRANSLATIONS = {
       about: "L'Evento",
       gallery: "Galleria",
       booking: "Prenota",
-      reservations: "Prenotazioni",
-      gmail: "Console Gmail"
+      reservations: "Prenotazioni"
     },
     hero: {
       subtitle: "Leopardi Signature Events",
@@ -129,7 +125,7 @@ const TRANSLATIONS = {
       social: "Connect",
       facebook: "Pagina Facebook",
       instagram: "Pagina Instagram",
-      copyright: "Copyright © 2026 Villa Leopardi."
+      copyright: "Copyright © 2025 Villa Leopardi."
     },
     modal: {
       badge: "Sunset Table 2026",
@@ -155,8 +151,7 @@ const TRANSLATIONS = {
       about: "The Event",
       gallery: "Gallery",
       booking: "Book",
-      reservations: "Reservations",
-      gmail: "Gmail Console"
+      reservations: "Reservations"
     },
     hero: {
       subtitle: "Leopardi Signature Events",
@@ -207,7 +202,7 @@ const TRANSLATIONS = {
       social: "Connect",
       facebook: "Facebook Page",
       instagram: "Instagram Page",
-      copyright: "Copyright © 2026 Villa Leopardi."
+      copyright: "Copyright © 2025 Villa Leopardi."
     },
     modal: {
       badge: "Sunset Table 2026",
@@ -233,8 +228,7 @@ const TRANSLATIONS = {
       about: "Das Event",
       gallery: "Galerie",
       booking: "Buchen",
-      reservations: "Reservierungen",
-      gmail: "Gmail-Zentrale"
+      reservations: "Reservierungen"
     },
     hero: {
       subtitle: "Leopardi Signature Events",
@@ -251,7 +245,7 @@ const TRANSLATIONS = {
       menuTitle: "Abend",
       menuSerata: "menü",
       menuItems: [
-        "Auswahl an rohem Fisch kombiniert mit einem Glas Champagne Pannier",
+        "Auswahl an rohem Fisch kombiniert con einem Glas Champagne Pannier",
         "Meeresfrüchte-Risotto",
         "Finales Dessert"
       ],
@@ -285,7 +279,7 @@ const TRANSLATIONS = {
       social: "Connect",
       facebook: "Facebook-Seite",
       instagram: "Instagram-Seite",
-      copyright: "Copyright © 2026 Villa Leopardi."
+      copyright: "Copyright © 2025 Villa Leopardi."
     },
     modal: {
       badge: "Sunset Table 2026",
@@ -311,7 +305,6 @@ const TRANSLATIONS = {
 export default function App() {
   const [lang, setLang] = useState<Language>("IT");
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [isGmailConsoleOpen, setIsGmailConsoleOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -338,25 +331,6 @@ export default function App() {
       });
 
       if (response.ok) {
-        // Trigger actual Gmail send if administrator is logged in through Google
-        const activeToken = getAccessToken();
-        if (activeToken) {
-          try {
-            const mailSubject = `Nuova prenotazione Sunset Table: ${formData.guests} ospiti - ${formData.name}`;
-            const mailMsg = `Richiesta Ricevuta!\n\nNome: ${formData.name}\nOspiti: ${formData.guests}\nTelefono: ${formData.phone}\nEmail: ${formData.email}\nMessaggio: ${formData.message || "Nessuno"}\n\nQuesta notifica è stata inviata automaticamente tramite l'API di Gmail di Villa Leopardi.`;
-            
-            // Send email to the hotel admin inbox and a copy to the guest!
-            await sendGmailMessage(activeToken, "zorziriccardo20@gmail.com", mailSubject, mailMsg);
-            if (formData.email) {
-              const guestSubject = "Villa Leopardi - Ricezione Richiesta Prenotazione";
-              const guestMsg = `Gentile ${formData.name},\n\nabbiamo ricevuto la tua richiesta di prenotazione per l'evento Sunset Table.\nIl nostro staff verificherà la disponibilità per ${formData.guests} persone e ti contatterà al più presto.\n\nDettagli della richiesta:\n- Telefono: ${formData.phone}\n- Note: ${formData.message || "Nessuna"}\n\nCordiali saluti,\nVilla Leopardi Staff`;
-              await sendGmailMessage(activeToken, formData.email, guestSubject, guestMsg);
-            }
-          } catch (gmailErr) {
-            console.error("Autosending email notifications via Gmail failed: ", gmailErr);
-          }
-        }
-
         setSubmitted(true);
         setTimeout(() => {
           setIsBookingOpen(false);
@@ -386,7 +360,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-brand-neutral selection:bg-brand-primary selection:text-brand-neutral">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-brand-neutral/80 backdrop-blur-md border-b border-brand-accent/30">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-transparent">
         <a href="/" className="flex items-center">
           <img 
             src="/Logo.png" 
@@ -394,10 +368,10 @@ export default function App() {
             className="h-10 md:h-12 w-auto object-contain transition-opacity duration-300 hover:opacity-85"
           />
         </a>
-        <div className="hidden lg:flex gap-8 text-[11px] uppercase tracking-[0.2em] font-medium text-brand-contrast/80">
-          <a href="#about" className="hover:text-brand-primary transition-colors">{T.nav.about}</a>
-          <a href="#gallery" className="hover:text-brand-primary transition-colors">{T.nav.gallery}</a>
-          <a href="#booking" className="hover:text-brand-primary transition-colors">{T.nav.booking}</a>
+        <div className="hidden lg:flex gap-8 text-[11px] uppercase tracking-[0.2em] font-medium text-brand-primary">
+          <a href="#about" className="hover:text-brand-accent transition-colors">{T.nav.about}</a>
+          <a href="#gallery" className="hover:text-brand-accent transition-colors">{T.nav.gallery}</a>
+          <a href="#booking" className="hover:text-brand-accent transition-colors">{T.nav.booking}</a>
         </div>
         <div className="flex items-center gap-4">
           {/* Language Switcher */}
@@ -433,15 +407,6 @@ export default function App() {
           </div>
 
           <button 
-            onClick={() => setIsGmailConsoleOpen(true)}
-            title={T.nav.gmail}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-widest border border-brand-contrast/20 hover:bg-brand-primary/10 hover:border-brand-primary transition-all rounded"
-          >
-            <Lock size={11} className="text-brand-primary" />
-            <span className="font-bold">{T.nav.gmail}</span>
-          </button>
-
-          <button 
             onClick={() => setIsBookingOpen(true)}
             className="px-5 py-2 text-[10px] uppercase tracking-widest border border-brand-contrast/20 hover:bg-brand-contrast hover:text-brand-neutral transition-all duration-300"
           >
@@ -453,10 +418,10 @@ export default function App() {
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div 
-          className="absolute inset-0 z-0 bg-fixed bg-cover bg-[center_47%]"
+          className="absolute inset-0 z-0 bg-fixed bg-cover bg-[center_60%] -rotate-2 scale-110"
           style={{ backgroundImage: `url(${IMAGES.hero})` }}
         />
-        <div className="absolute inset-0 bg-brand-contrast/40 z-0" />
+        <div className="absolute inset-0 bg-black/20 z-0" />
         
         <div className="relative z-10 text-center text-brand-neutral px-4">
           <motion.div
@@ -683,8 +648,8 @@ export default function App() {
           <div>
             <h5 className="text-[10px] uppercase tracking-widest font-bold text-brand-primary mb-6">{T.footer.social}</h5>
             <div className="space-y-3 text-xs font-light flex flex-col">
-              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><LucideFacebook size={14} /> {T.footer.facebook}</a>
-              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><LucideInstagram size={14} /> {T.footer.instagram}</a>
+              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><Instagram size={14} /> {T.footer.facebook}</a>
+              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><Instagram size={14} /> {T.footer.instagram}</a>
             </div>
           </div>
         </div>
@@ -773,7 +738,7 @@ export default function App() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">{T.modal.phone}</label>
+                          <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">Telefono</label>
                           <input 
                             type="tel" 
                             required
@@ -786,7 +751,7 @@ export default function App() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">{T.modal.email}</label>
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">Email</label>
                         <input 
                           type="email" 
                           required
@@ -827,7 +792,6 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
-      <GmailConsole isOpen={isGmailConsoleOpen} onClose={() => setIsGmailConsoleOpen(false)} />
     </div>
   );
 }

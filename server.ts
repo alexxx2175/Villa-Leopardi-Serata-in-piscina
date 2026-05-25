@@ -2,35 +2,28 @@ import fs from "fs";
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// Initialize the Nodemailer transporter lazily
-const getTransporter = () => {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
+// Initialize the Resend client lazily
+const getResendClient = () => {
+  const apiKey = process.env.RESEND_API_KEY;
 
-  if (!user || !pass) {
+  if (!apiKey) {
     console.warn(
-      "⚠️ WARNING: GMAIL_USER or GMAIL_APP_PASSWORD has not been configured in your environment variables. Email notification features will be skipped."
+      "⚠️ WARNING: RESEND_API_KEY has not been configured in your environment variables. Email notification features will be skipped."
     );
     return null;
   }
 
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user,
-      pass,
-    },
-  });
+  return new Resend(apiKey);
 };
 
 async function startServer() {
   const app = express();
-  const PORT = parseInt(process.env.PORT || "3000", 10);
+  const PORT = 3000;
 
   app.use(express.json());
 
@@ -38,28 +31,17 @@ async function startServer() {
   app.post("/api/book", async (req, res) => {
     const { name, guests, phone, email, message } = req.body;
 
-    // Input validation
-    if (!name || !guests || !phone || !email) {
-      return res.status(400).json({ success: false, message: "Campi obbligatori mancanti." });
-    }
-    if (typeof email !== "string" || !email.includes("@")) {
-      return res.status(400).json({ success: false, message: "Email non valida." });
-    }
-    const numGuests = parseInt(String(guests), 10);
-    if (isNaN(numGuests) || numGuests < 1 || numGuests > 50) {
-      return res.status(400).json({ success: false, message: "Numero di ospiti non valido (1-50)." });
-    }
-
     const adminTarget = process.env.ADMIN_EMAIL || "zorziriccardo20@gmail.com";
-    const senderEmail = process.env.GMAIL_USER;
+    // Resend's default free sandbox sender is "onboarding@resend.dev"
+    const senderEmail = process.env.SENDER_EMAIL || "Villa Leopardi <onboarding@resend.dev>";
 
     console.log("--- NUOVA RICHIESTA DI PRENOTAZIONE ---");
     console.log(`Nome: ${name}, Ospiti: ${guests}, Email: ${email}`);
 
-    // Get nodemailer transporter
-    const transporter = getTransporter();
+    // Get Resend API Client
+    const resendClient = getResendClient();
 
-    if (transporter && senderEmail) {
+    if (resendClient) {
       try {
         // 1. Email to the Admin (Hotel concierge)
         const adminSubject = `Nuova Richiesta Sunset Table: ${guests} Ospiti - ${name}`;
@@ -115,8 +97,8 @@ async function startServer() {
           </html>
         `;
 
-        await transporter.sendMail({
-          from: `"Villa Leopardi Portal" <${senderEmail}>`,
+        await resendClient.emails.send({
+          from: senderEmail,
           to: adminTarget,
           subject: adminSubject,
           html: adminHtml,
@@ -191,8 +173,8 @@ async function startServer() {
             </html>
           `;
 
-          await transporter.sendMail({
-            from: `"Villa Leopardi Concierge" <${senderEmail}>`,
+          await resendClient.emails.send({
+            from: senderEmail,
             to: email,
             subject: guestSubject,
             html: guestHtml,
@@ -201,10 +183,10 @@ async function startServer() {
           console.log(`✓ Email di cortesia inviata con successo all'ospite: ${email}`);
         }
       } catch (err) {
-        console.error("❌ ERRORE durante la spedizione delle email con Nodemailer:", err);
+        console.error("❌ ERRORE durante la spedizione delle email con Resend:", err);
       }
     } else {
-      console.warn("⚠️ Nodemailer non configurato. Le email non sono state inviate.");
+      console.warn("⚠️ Resend non configurato. Le email non sono state inviate.");
     }
 
     res.json({ success: true, message: "Richiesta ricevuta correttamente." });
