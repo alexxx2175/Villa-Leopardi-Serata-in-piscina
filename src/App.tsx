@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Camera, Calendar, MapPin, Music, Sunset, Star, ChevronDown, Instagram, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
+import { Camera, Calendar, MapPin, Music, Sunset, Star, ChevronDown, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
 import droneImage from "./assets/images/regenerated_image_1779188638766.png";
 
 const IMAGES = {
@@ -321,9 +321,27 @@ export default function App() {
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
-    if (query.get("success")) {
+    const success = query.get("success");
+    const sessionId = query.get("session_id");
+
+    if (success) {
       setIsBookingOpen(true);
       setSubmitted(true);
+      
+      // Notify backend to confirm payment and send emails
+      if (sessionId) {
+        fetch("/api/confirm-payment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ session_id: sessionId }),
+        }).catch(console.error);
+
+        // Remove session_id from URL strictly for UI cleanliness
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
       setTimeout(() => {
         setIsBookingOpen(false);
         setSubmitted(false);
@@ -331,6 +349,7 @@ export default function App() {
     }
     if (query.get("canceled")) {
       alert("Il pagamento è stato annullato. / Payment canceled. / Zahlung abgebrochen.");
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
@@ -437,26 +456,26 @@ export default function App() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-[100dvh] flex items-center justify-center overflow-hidden">
         
-        <div className="relative z-10 text-center text-brand-neutral px-4">
+        <div className="relative z-10 text-center text-brand-neutral px-4 mt-8 md:mt-0">
           <motion.div
-            initial={{ opacity: 0, letterSpacing: "0.5em" }}
+            initial={{ opacity: 0, letterSpacing: "0.2em" }}
             animate={{ opacity: 1, letterSpacing: "1em" }}
             transition={{ duration: 1.5, ease: "easeOut" }}
-            className="mb-4"
+            className="mb-4 md:mb-6"
           >
-            <span className="text-xs md:text-sm uppercase font-light tracking-[1em] text-brand-primary">{T.hero.subtitle}</span>
+            <span className="text-[9px] md:text-sm uppercase font-light tracking-[1em] md:tracking-[2em] text-brand-primary ml-2">{T.hero.subtitle}</span>
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.5, delay: 0.4, ease: "easeOut" }}
-            className="flex flex-col items-center mb-6"
+            className="flex flex-col items-center mb-6 md:mb-8"
           >
-            <span className="text-5xl md:text-9xl font-serif font-light tracking-[0.18em] text-brand-primary uppercase leading-tight mb-2 select-none">{T.hero.title1}</span>
-            <span className="text-5xl md:text-9xl font-serif font-light tracking-[0.18em] text-brand-primary uppercase leading-tight select-none">{T.hero.title2}</span>
-            <div className="flex gap-1.5 justify-center items-center mt-8 opacity-85 select-none">
+            <span className="text-6xl md:text-9xl font-serif font-light tracking-[0.1em] md:tracking-[0.18em] text-brand-primary uppercase leading-none md:leading-tight mb-2 select-none">{T.hero.title1}</span>
+            <span className="text-6xl md:text-9xl font-serif font-light tracking-[0.1em] md:tracking-[0.18em] text-brand-primary uppercase leading-none md:leading-tight select-none">{T.hero.title2}</span>
+            <div className="flex gap-1.5 justify-center items-center mt-6 md:mt-8 opacity-85 select-none">
               {[1, 2, 3, 4].map((s) => (
                 <Star key={s} size={14} className="text-brand-primary fill-brand-primary stroke-none animate-pulse-slow" />
               ))}
@@ -467,9 +486,9 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="flex flex-col items-center gap-10"
+            className="flex flex-col items-center gap-6 md:gap-10"
           >
-            <p className="max-w-xl mx-auto text-sm md:text-3xl font-signature opacity-90 leading-relaxed text-brand-primary italic lowercase">
+            <p className="max-w-xl mx-auto text-base md:text-3xl font-signature opacity-90 leading-relaxed text-brand-primary italic lowercase">
               {T.hero.desc}
             </p>
             <motion.div
@@ -485,21 +504,21 @@ export default function App() {
 
       <main className="relative z-10 bg-brand-neutral">
       {/* About Section */}
-      <section id="about" className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
+      <section id="about" className="py-16 md:py-24 px-4 md:px-12 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
           <motion.div {...fadeInUp}>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-brand-primary font-bold mb-4 block underline decoration-brand-accent underline-offset-8">{T.about.badge}</span>
-            <h2 className="text-4xl md:text-5xl mb-8 leading-tight">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-brand-primary font-bold mb-3 md:mb-4 block underline decoration-brand-accent underline-offset-4 md:underline-offset-8">{T.about.badge}</span>
+            <h2 className="text-3xl md:text-5xl mb-6 md:mb-8 leading-tight">
               {T.about.title} <br /> 
               <span className="italic text-brand-primary">{T.about.titleItalic}</span>
             </h2>
-            <div className="space-y-6 text-brand-contrast/70 leading-loose text-sm md:text-lg font-light">
+            <div className="space-y-4 md:space-y-6 text-brand-contrast/70 leading-relaxed md:leading-loose text-sm md:text-lg font-light">
               <p>{T.about.desc1}</p>
               <p>{T.about.desc2}</p>
             </div>
 
             {/* Menu Section */}
-            <div className="mt-12 p-8 bg-brand-accent/20 border border-brand-accent/60 rounded-[12px]">
+            <div className="mt-10 md:mt-12 p-6 md:p-8 bg-brand-accent/20 border border-brand-accent/60 rounded-[12px]">
               <h3 className="text-xs uppercase tracking-[0.3em] font-bold mb-6 text-brand-contrast">{T.about.menuTitle} <span className="font-signature normal-case tracking-normal text-xl">{T.about.menuSerata}</span>:</h3>
               <ul className="space-y-4 text-brand-contrast/80">
                 {T.about.menuItems.map((item, i) => (
@@ -539,8 +558,8 @@ export default function App() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 bg-brand-contrast text-brand-neutral overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+      <section className="py-16 md:py-20 bg-brand-contrast text-brand-neutral overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {T.features.map((item, i) => {
             const IconComponent = [Music, Sunset, Users, Calendar][i];
             return (
@@ -567,12 +586,12 @@ export default function App() {
       </section>
 
       {/* Gallery Section */}
-      <section id="gallery" className="py-24 bg-brand-neutral">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+      <section id="gallery" className="py-16 md:py-24 bg-brand-neutral">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-16 gap-6">
             <div>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-brand-primary font-bold mb-4 block underline decoration-brand-accent underline-offset-8">{T.gallery.badge}</span>
-              <h2 className="text-4xl md:text-5xl font-serif text-brand-contrast">{T.gallery.title}</h2>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-brand-primary font-bold mb-3 md:mb-4 block underline decoration-brand-accent underline-offset-4 md:underline-offset-8">{T.gallery.badge}</span>
+              <h2 className="text-3xl md:text-5xl font-serif text-brand-contrast">{T.gallery.title}</h2>
             </div>
           </div>
           
@@ -581,18 +600,18 @@ export default function App() {
             initial="initial"
             whileInView="whileInView"
             viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-12 gap-6"
+            className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6"
           >
-            <motion.div variants={fadeInUp} className="md:col-span-8 h-[300px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
+            <motion.div variants={fadeInUp} className="md:col-span-8 h-[250px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
               <img src={IMAGES.drone} alt="Villa Overview" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" />
             </motion.div>
-            <motion.div variants={fadeInUp} className="md:col-span-4 h-[300px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
+            <motion.div variants={fadeInUp} className="md:col-span-4 h-[250px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
               <img src={IMAGES.poolSide} alt="Pool Side" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" />
             </motion.div>
-            <motion.div variants={fadeInUp} className="md:col-span-4 h-[300px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
+            <motion.div variants={fadeInUp} className="md:col-span-4 h-[250px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
               <img src={IMAGES.villa} alt="Villa" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" />
             </motion.div>
-            <motion.div variants={fadeInUp} className="md:col-span-8 h-[300px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
+            <motion.div variants={fadeInUp} className="md:col-span-8 h-[250px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
               <img src={IMAGES.party} alt="Night Atmosphere" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" />
             </motion.div>
           </motion.div>
@@ -600,25 +619,25 @@ export default function App() {
       </section>
 
       {/* Info & Booking Section */}
-      <section id="booking" className="py-24 bg-brand-neutral border-y border-brand-accent/30 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-20 opacity-[0.03]">
-          <span className="text-[300px] font-serif leading-none italic pointer-events-none text-brand-contrast">Villa</span>
+      <section id="booking" className="py-16 md:py-24 bg-brand-neutral border-y border-brand-accent/30 overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-10 md:p-20 opacity-[0.03]">
+          <span className="text-[150px] md:text-[300px] font-serif leading-none italic pointer-events-none text-brand-contrast">Villa</span>
         </div>
         
-        <div className="max-w-4xl mx-auto px-6 text-center">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 text-center relative z-10">
           <motion.div {...fadeInUp}>
-            <h2 className="text-4xl md:text-5xl font-serif text-brand-contrast mb-12">{T.bookingSection.title}</h2>
+            <h2 className="text-3xl md:text-5xl font-serif text-brand-contrast mb-8 md:mb-12">{T.bookingSection.title}</h2>
             
-            <div className="grid md:grid-cols-3 gap-8 mb-16 px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12 px-0 md:px-4">
               {T.bookingSection.slots.map((slot, i) => {
                 const IconComponent = [Calendar, MapPin, Star][i];
                 return (
-                  <div key={i} className="p-8 border border-brand-accent/60 bg-brand-neutral/40 rounded-[12px] hover:bg-brand-neutral/80 transition-all duration-300 shadow-sm">
+                  <div key={i} className="p-4 md:p-6 border border-brand-accent/60 bg-brand-neutral/40 rounded-[12px] hover:bg-brand-neutral/80 transition-all duration-300 shadow-sm">
                     {IconComponent && (
-                      <IconComponent className="mx-auto mb-4 text-brand-primary" size={20} />
+                      <IconComponent className="mx-auto mb-2 md:mb-3 text-brand-primary" size={18} />
                     )}
-                    <h4 className="text-[10px] uppercase font-bold tracking-widest mb-2 text-brand-contrast opacity-80">{slot.label}</h4>
-                    <p className="text-sm font-serif text-brand-contrast font-medium">{slot.value}</p>
+                    <h4 className="text-[9px] md:text-[10px] uppercase font-bold tracking-widest mb-1 md:mb-2 text-brand-contrast opacity-80">{slot.label}</h4>
+                    <p className="text-xs md:text-sm font-serif text-brand-contrast font-medium">{slot.value}</p>
                   </div>
                 );
               })}
@@ -641,28 +660,28 @@ export default function App() {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-6 bg-brand-contrast text-brand-neutral/80 border-t border-brand-accent/10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 md:gap-8">
+      <footer className="py-16 md:py-20 px-4 md:px-6 bg-brand-contrast text-brand-neutral/80 border-t border-brand-accent/10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
           <div className="md:col-span-2">
-            <div className="mb-8 flex items-center gap-6">
+            <div className="mb-6 md:mb-8 flex items-center gap-6">
               <VillaLeopardiLogo isDarkBg={true} size="footer" />
             </div>
-            <p className="text-sm leading-loose max-w-sm font-light opacity-60">
+            <p className="text-xs md:text-sm leading-relaxed md:leading-loose max-w-sm font-light opacity-60">
               {T.footer.desc}
             </p>
           </div>
           <div>
-            <h5 className="text-[10px] uppercase tracking-widest font-bold text-brand-primary mb-6">{T.footer.contact}</h5>
+            <h5 className="text-[10px] uppercase tracking-widest font-bold text-brand-primary mb-4 md:mb-6">{T.footer.contact}</h5>
             <div className="space-y-4 text-xs font-light">
-              <a href="tel:+390452457318" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><Phone size={14} /> +39 045 2457318</a>
-              <a href="mailto:info@villaleopardi.it" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><Mail size={14} /> info@villaleopardi.it</a>
-              <p className="flex items-center gap-3 leading-relaxed"><MapPin size={14} className="shrink-0" /> Via Gardesana 21 30, Torri del Benaco, VR</p>
+              <a href="tel:+390452457318" className="flex items-start md:items-center gap-3 hover:text-brand-primary transition-colors"><Phone size={14} className="shrink-0 mt-0.5 md:mt-0" /> +39 045 2457318</a>
+              <a href="mailto:info@villaleopardi.it" className="flex items-start md:items-center gap-3 hover:text-brand-primary transition-colors"><Mail size={14} className="shrink-0 mt-0.5 md:mt-0" /> info@villaleopardi.it</a>
+              <p className="flex items-start md:items-center gap-3 leading-relaxed"><MapPin size={14} className="shrink-0 mt-0.5 md:mt-0" /> Via Gardesana 21 30, Torri del Benaco, VR</p>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-brand-neutral/10 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest opacity-40">
-          <p>{T.footer.copyright}</p>
-          <div className="flex gap-8">
+        <div className="max-w-7xl mx-auto mt-16 md:mt-20 pt-8 border-t border-brand-neutral/10 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] uppercase tracking-widest opacity-40">
+          <p className="text-center md:text-left">{T.footer.copyright}</p>
+          <div className="flex flex-wrap justify-center md:justify-end gap-6 md:gap-8">
             <a href="#" className="hover:text-brand-primary transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-brand-primary transition-colors">Cookie Policy</a>
           </div>
@@ -686,7 +705,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative bg-brand-neutral w-full max-w-lg p-8 md:p-12 shadow-2xl border border-brand-accent/30 rounded-[16px] overflow-hidden"
+              className="relative bg-brand-neutral w-full max-w-lg p-5 md:p-10 shadow-2xl border border-brand-accent/30 rounded-[16px] overflow-hidden max-h-[95vh] overflow-y-auto"
             >
               {/* Decoration */}
               <div className="absolute -top-12 -right-12 p-20 opacity-[0.03] text-brand-contrast">
@@ -695,16 +714,16 @@ export default function App() {
 
               <button 
                 onClick={() => setIsBookingOpen(false)}
-                className="absolute top-6 right-6 text-brand-contrast/40 hover:text-brand-primary transition-colors"
+                className="absolute top-6 right-6 z-20 text-brand-contrast/40 hover:text-brand-primary transition-colors"
               >
                 <X size={24} />
               </button>
 
               <div className="relative z-10">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-brand-primary font-bold mb-2 block">{T.modal.badge}</span>
-                <h2 className="text-3xl md:text-4xl font-serif text-brand-contrast mb-8 tracking-tight">{T.modal.title} <span className="italic text-brand-primary">{T.modal.titleItalic}</span></h2>
+                <span className="text-[10px] uppercase tracking-[0.3em] text-brand-primary font-bold mb-1 md:mb-2 block">{T.modal.badge}</span>
+                <h2 className="text-2xl md:text-4xl font-serif text-brand-contrast mb-4 md:mb-8 tracking-tight">{T.modal.title} <span className="italic text-brand-primary">{T.modal.titleItalic}</span></h2>
 
-                <form className="space-y-6" onSubmit={handleSubmit}>
+                <form className="space-y-3 md:space-y-6" onSubmit={handleSubmit}>
                   {submitted ? (
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.9 }}
@@ -727,11 +746,11 @@ export default function App() {
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           placeholder={T.modal.namePlaceholder} 
-                          className="w-full bg-brand-neutral border border-brand-accent/65 px-4 py-4 text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all text-brand-contrast"
+                          className="w-full bg-brand-neutral border border-brand-accent/65 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all text-brand-contrast"
                         />
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-2 gap-3 md:gap-6">
                         <div className="space-y-1">
                           <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">{T.modal.guests}</label>
                           <input 
@@ -742,7 +761,7 @@ export default function App() {
                             value={formData.guests}
                             onChange={(e) => setFormData({ ...formData, guests: e.target.value })}
                             placeholder={T.modal.guestsPlaceholder} 
-                            className="w-full bg-brand-neutral border border-brand-accent/65 px-4 py-4 text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all text-brand-contrast"
+                            className="w-full bg-brand-neutral border border-brand-accent/65 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all text-brand-contrast"
                           />
                         </div>
                         <div className="space-y-1">
@@ -753,7 +772,7 @@ export default function App() {
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                             placeholder="+39 000 0000000" 
-                            className="w-full bg-brand-neutral border border-brand-accent/65 px-4 py-4 text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all text-brand-contrast"
+                            className="w-full bg-brand-neutral border border-brand-accent/65 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all text-brand-contrast"
                           />
                         </div>
                       </div>
@@ -766,26 +785,26 @@ export default function App() {
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           placeholder="la-tua@email.com" 
-                          className="w-full bg-brand-neutral border border-brand-accent/65 px-4 py-4 text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all text-brand-contrast"
+                          className="w-full bg-brand-neutral border border-brand-accent/65 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all text-brand-contrast"
                         />
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase tracking-widest font-bold opacity-60 block ml-1 text-brand-contrast">{T.modal.message}</label>
                         <textarea 
-                          rows={3}
+                          rows={2}
                           value={formData.message}
                           onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                           placeholder={T.modal.messagePlaceholder} 
-                          className="w-full bg-brand-neutral border border-brand-accent/65 px-4 py-4 text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all resize-none text-brand-contrast"
+                          className="w-full bg-brand-neutral border border-brand-accent/65 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all resize-none text-brand-contrast"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between pt-4 pb-2 border-t border-brand-accent/30">
+                      <div className="flex items-center justify-between pt-2 md:pt-4 pb-1 md:pb-2 border-t border-brand-accent/30">
                         <span className="text-[10px] uppercase font-bold tracking-widest text-brand-contrast">
                           {T.modal.totalPrice}
                         </span>
-                        <div className="text-2xl font-serif text-brand-contrast">
+                        <div className="text-xl md:text-2xl font-serif text-brand-contrast">
                           € {parseInt(formData.guests || "1") * 50},00
                         </div>
                       </div>
@@ -793,7 +812,7 @@ export default function App() {
                       <button 
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full bg-brand-contrast text-brand-neutral py-5 text-xs uppercase tracking-[0.3em] font-bold hover:bg-brand-primary hover:text-brand-contrast rounded-[8px] transition-all duration-500 mt-4 shadow-lg shadow-brand-primary/10 disabled:opacity-50"
+                        className="w-full bg-brand-contrast text-brand-neutral py-3 md:py-5 text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold hover:bg-brand-primary hover:text-brand-contrast rounded-[8px] transition-all duration-500 mt-2 md:mt-4 shadow-lg shadow-brand-primary/10 disabled:opacity-50"
                       >
                         {isSubmitting ? T.modal.submitting : T.modal.submit}
                       </button>

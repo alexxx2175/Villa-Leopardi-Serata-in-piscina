@@ -32,6 +32,9 @@ const getResendClient = () => {
   return new Resend(apiKey);
 };
 
+// Set to store processed session IDs
+const processedSessions = new Set<string>();
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -51,26 +54,6 @@ async function startServer() {
     const PRICE_PER_PERSON_CENTS = 5000; // 50€
 
     try {
-      // First we send the email using existing code (optional: could be moved to webhook)
-      const adminTarget = process.env.ADMIN_EMAIL || "zorziriccardo20@gmail.com";
-      const senderEmail = process.env.SENDER_EMAIL || "Villa Leopardi <onboarding@resend.dev>";
-      const resendClient = getResendClient();
-
-      if (resendClient) {
-        try {
-          const adminSubject = `Nuova Richiesta Sunset Table (IN ATTESA DI PAGAMENTO): ${guests} Ospiti - ${name}`;
-          const adminHtml = `<p>Ospite ${name} (${guests} persone) sta procedendo al pagamento con Stripe. Email: ${email}, Telefono: ${phone}.</p>`;
-          await resendClient.emails.send({
-            from: senderEmail,
-            to: adminTarget,
-            subject: adminSubject,
-            html: adminHtml,
-          });
-        } catch (err) {
-          console.error("Resend error:", err);
-        }
-      }
-
       const domain = req.headers.origin || `http://localhost:${PORT}`;
 
       const session = await stripe.checkout.sessions.create({
@@ -89,7 +72,7 @@ async function startServer() {
           }
         ],
         mode: 'payment',
-        success_url: `${domain}?success=true`,
+        success_url: `${domain}?success=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${domain}?canceled=true`,
         customer_email: email,
         metadata: {
@@ -103,6 +86,78 @@ async function startServer() {
       res.json({ id: session.id, url: session.url });
     } catch (e: any) {
       console.error(e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Confirm payment & send emails
+  app.post("/api/confirm-payment", async (req, res) => {
+    const { session_id } = req.body;
+    
+    if (!session_id || processedSessions.has(session_id)) {
+      return res.json({ success: true, message: "Already processed or invalid." });
+    }
+
+    const stripe = getStripeClient();
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe is not configured" });
+    }
+
+    try {
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+      
+      if (session.payment_status === "paid") {
+        processedSessions.add(session_id);
+        
+        const metadata = session.metadata || {};
+        const { name, guests, phone, message } = metadata;
+        const email = session.customer_email || metadata.email;
+
+        const resendClient = getResendClient();
+        if (resendClient) {
+          const adminTarget = process.env.ADMIN_EMAIL || "zorziriccardo20@gmail.com";
+          const senderEmail = process.env.SENDER_EMAIL || "Villa Leopardi <onboarding@resend.dev>";
+          
+          // 1. Email to Admin (Villa Leopardi)
+          const adminHtml = `
+            <h2>Conferma Pagamento & Prenotazione</h2>
+            <p><strong>Ospite:</strong> ${name}</p>
+            <p><strong>Numero Ospiti:</strong> ${guests}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Telefono:</strong> ${phone}</p>
+            <p><strong>Note:</strong> ${message || "Nessuna"}</p>
+            <p><strong>Status Pagamento:</strong> PAGATO IN MODO SICURO (${session.amount_total ? session.amount_total / 100 : 0} €)</p>
+          `;
+          await resendClient.emails.send({
+             from: senderEmail,
+             to: adminTarget,
+             subject: `CONFERMATA: Prenotazione Sunset Table per ${name}`,
+             html: adminHtml,
+          });
+
+          // 2. Email to the Client
+          if (email) {
+            const guestHtml = `
+              <h2>Pagamento Confermato</h2>
+              <p>Gentile <strong>${name}</strong>,</p>
+              <p>Il tuo pagamento è andato a buon fine. Abbiamo riservato per te il Sunset Table per ${guests} persone a Villa Leopardi.</p>
+              <p>Siamo felici di accoglierti al nostro evento esclusivo.</p>
+              <p>Per qualsiasi esigenza puoi contattarci rispondendo a questa email.</p>
+              <p>Cordiali saluti,<br>Team Villa Leopardi</p>
+            `;
+            await resendClient.emails.send({
+              from: senderEmail,
+              to: email,
+              subject: "Conferma Prenotazione - Villa Leopardi Sunset Table",
+              html: guestHtml
+            });
+          }
+        }
+      }
+
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error("Error confirming payment:", e);
       res.status(500).json({ error: e.message });
     }
   });
