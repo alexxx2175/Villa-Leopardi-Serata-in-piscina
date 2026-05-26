@@ -4,8 +4,19 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import dotenv from "dotenv";
+import Stripe from "stripe";
 
 dotenv.config();
+
+// Initialize the Stripe client lazily
+const getStripeClient = () => {
+  const apiKey = process.env.STRIPE_SECRET_KEY;
+  if (!apiKey) {
+    console.warn("⚠️ WARNING: STRIPE_SECRET_KEY has not been configured in your environment variables.");
+    return null;
+  }
+  return new Stripe(apiKey, { apiVersion: "2023-10-16" as any });
+};
 
 // Initialize the Resend client lazily
 const getResendClient = () => {
@@ -27,7 +38,76 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API Route for Booking
+  // API Route for Stripe Checkout
+  app.post("/api/create-checkout-session", async (req, res) => {
+    const { name, guests, phone, email, message } = req.body;
+    
+    const stripe = getStripeClient();
+    
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe is not configured on the server." });
+    }
+
+    const PRICE_PER_PERSON_CENTS = 5000; // 50€
+
+    try {
+      // First we send the email using existing code (optional: could be moved to webhook)
+      const adminTarget = process.env.ADMIN_EMAIL || "zorziriccardo20@gmail.com";
+      const senderEmail = process.env.SENDER_EMAIL || "Villa Leopardi <onboarding@resend.dev>";
+      const resendClient = getResendClient();
+
+      if (resendClient) {
+        try {
+          const adminSubject = `Nuova Richiesta Sunset Table (IN ATTESA DI PAGAMENTO): ${guests} Ospiti - ${name}`;
+          const adminHtml = `<p>Ospite ${name} (${guests} persone) sta procedendo al pagamento con Stripe. Email: ${email}, Telefono: ${phone}.</p>`;
+          await resendClient.emails.send({
+            from: senderEmail,
+            to: adminTarget,
+            subject: adminSubject,
+            html: adminHtml,
+          });
+        } catch (err) {
+          console.error("Resend error:", err);
+        }
+      }
+
+      const domain = req.headers.origin || `http://localhost:${PORT}`;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: `Sunset Table - ${guests} Ospiti`,
+                description: `Prenotazione a nome di ${name} per l'evento Sunset Table presso Villa Leopardi.`,
+              },
+              unit_amount: PRICE_PER_PERSON_CENTS,
+            },
+            quantity: parseInt(guests || "1"),
+          }
+        ],
+        mode: 'payment',
+        success_url: `${domain}?success=true`,
+        cancel_url: `${domain}?canceled=true`,
+        customer_email: email,
+        metadata: {
+          name,
+          phone,
+          guests,
+          message
+        }
+      });
+      
+      res.json({ id: session.id, url: session.url });
+    } catch (e: any) {
+      console.error(e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Legacy API Route for Booking
   app.post("/api/book", async (req, res) => {
     const { name, guests, phone, email, message } = req.body;
 

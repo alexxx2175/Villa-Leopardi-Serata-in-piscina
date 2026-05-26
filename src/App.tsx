@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Camera, Calendar, MapPin, Music, Sunset, Star, ChevronDown, Instagram, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
 import droneImage from "./assets/images/regenerated_image_1779188638766.png";
 
 const IMAGES = {
-  hero: "/chat_image.png",
+  hero: "/piscinatramnoto.png",
   aperitivo: "/ChatGPT Image 25 mag 2026, 19_11_43.png",
   poolSide: "/poolside.jpg",
   villa: "/villa.jpg",
@@ -105,8 +105,7 @@ const TRANSLATIONS = {
     ],
     gallery: {
       badge: "Visual Moments",
-      title: "La nostra cornice.",
-      quote: "La bellezza non è che l'inizio del terrore che siamo ancora appena capaci di sopportare."
+      title: "La nostra cornice."
     },
     bookingSection: {
       title: "Unisciti a noi.",
@@ -139,11 +138,12 @@ const TRANSLATIONS = {
       email: "Email",
       message: "Messaggio o Domande",
       messagePlaceholder: "Scrivi qui eventuali richieste particolari...",
-      submit: "Invia Richiesta",
-      submitting: "Invio in corso...",
+      submit: "Vai al Pagamento",
+      submitting: "Apertura Checkout...",
       successTitle: "Richiesta Inviata!",
       successDesc: "Ti ricontatteremo a breve.",
-      footerNote: "Sarete ricontattati dal nostro staff per confermare la disponibilità del tavolo."
+      footerNote: "Verrai reindirizzato al pagamento sicuro.",
+      totalPrice: "Totale (50€/pers):"
     }
   },
   EN: {
@@ -182,8 +182,7 @@ const TRANSLATIONS = {
     ],
     gallery: {
       badge: "Visual Moments",
-      title: "Our Frame.",
-      quote: "Beauty is nothing but the beginning of terror, which we are still just able to endure."
+      title: "Our Frame."
     },
     bookingSection: {
       title: "Join Us.",
@@ -216,11 +215,12 @@ const TRANSLATIONS = {
       email: "Email",
       message: "Message or Questions",
       messagePlaceholder: "Write any special requests here...",
-      submit: "Submit Request",
-      submitting: "Sending...",
+      submit: "Proceed to Checkout",
+      submitting: "Redirecting...",
       successTitle: "Request Sent!",
       successDesc: "We will contact you shortly.",
-      footerNote: "Our staff will contact you to confirm table availability."
+      footerNote: "You'll be redirected to secure payment.",
+      totalPrice: "Total (50€/pers):"
     }
   },
   DE: {
@@ -238,36 +238,35 @@ const TRANSLATIONS = {
     },
     about: {
       badge: "Sunset Table 2026",
-      title: "Wo Geschmack auf",
-      titleItalic: "das Sonnenuntergangslicht trifft.",
+      title: "Wo Genuss auf",
+      titleItalic: "das Licht des Sonnenuntergangs trifft.",
       desc1: "Villa Leopardi präsentiert einen exklusiven Abend, der den Sonnenuntergang mit Eleganz und Meeresaromen begleitet.",
       desc2: "Ein gastronomisches Erlebnis der Extraklasse, eingebettet in die magische Atmosphäre unserer Gärten, zwischen dem Spiegelbild des Infinity-Pools und dem letzten Licht des Tages.",
-      menuTitle: "Abend",
-      menuSerata: "menü",
+      menuTitle: "Menü",
+      menuSerata: "des Abends",
       menuItems: [
-        "Auswahl an rohem Fisch kombiniert con einem Glas Champagne Pannier",
+        "Auswahl an rohem Fisch, serviert mit einem Glas Champagne Pannier",
         "Meeresfrüchte-Risotto",
-        "Finales Dessert"
+        "Dessert zum Abschluss"
       ],
       experienceBadge: "4-Sterne Superior Erfahrung"
     },
     features: [
       { label: "Lounge Musik", desc: "DJ Set & Vibes" },
       { label: "Sonnenuntergang", desc: "Poolside View" },
-      { label: "Exklusiv", desc: "Max 50 Plätze" },
+      { label: "Exklusiv", desc: "Max. 50 Plätze" },
       { label: "Datum", desc: "20. Juni 2026" },
     ],
     gallery: {
       badge: "Visual Moments",
-      title: "Unser Rahmen.",
-      quote: "Das Schöne è nichts als des Schrecklichen Anfang, den wir noch grade ertragen."
+      title: "Unser Rahmen."
     },
     bookingSection: {
-      title: "Begleiten Sie uns.",
+      title: "Seien Sie dabei.",
       slots: [
-        { label: "Uhrzeit", value: "ab 18:30" },
+        { label: "Uhrzeit", value: "ab 18:30 Uhr" },
         { label: "Musik", value: "Lounge Musik & DJ Set" },
-        { label: "Kapazität", value: "Max 50 Plätze" }
+        { label: "Kapazität", value: "Max. 50 Plätze" }
       ],
       note: "Begrenzte Plätze. Buchen Sie auf villaleopardi.it, um sich einen Tisch bei Sonnenuntergang zu sichern.",
       btnPrimary: "Jetzt Buchen",
@@ -293,11 +292,12 @@ const TRANSLATIONS = {
       email: "E-Mail",
       message: "Nachricht oder Fragen",
       messagePlaceholder: "Schreiben Sie hier Ihre Wünsche...",
-      submit: "Anfrage Senden",
-      submitting: "Wird gesendet...",
+      submit: "Zur Kasse",
+      submitting: "Weiterleiten...",
       successTitle: "Anfrage Gesendet!",
       successDesc: "Wir werden uns in Kürze bei Ihnen melden.",
-      footerNote: "Unser Personal wird Sie kontaktieren, um die Tischverfügbarkeit zu bestätigen."
+      footerNote: "Sie werden zur sicheren Zahlung weitergeleitet.",
+      totalPrice: "Gesamt (50€/Pers):"
     }
   }
 };
@@ -319,28 +319,42 @@ export default function App() {
     message: ""
   });
 
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    if (query.get("success")) {
+      setIsBookingOpen(true);
+      setSubmitted(true);
+      setTimeout(() => {
+        setIsBookingOpen(false);
+        setSubmitted(false);
+      }, 5000);
+    }
+    if (query.get("canceled")) {
+      alert("Il pagamento è stato annullato. / Payment canceled. / Zahlung abgebrochen.");
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
     try {
-      const response = await fetch("/api/book", {
+      const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
-        setSubmitted(true);
-        setTimeout(() => {
-          setIsBookingOpen(false);
-          setSubmitted(false);
-          setFormData({ name: "", guests: "", phone: "", email: "", message: "" });
-        }, 3000);
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Errore/Error/Fehler: " + (data.error || "Could not init checkout"));
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Error submitting booking:", error);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -360,27 +374,27 @@ export default function App() {
   return (
     <div className="min-h-screen bg-brand-neutral selection:bg-brand-primary selection:text-brand-neutral">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-transparent">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 md:px-6 py-4 bg-transparent">
         <a href="/" className="flex items-center">
           <img 
             src="/Logo.png" 
             alt="Villa Leopardi" 
-            className="h-10 md:h-12 w-auto object-contain transition-opacity duration-300 hover:opacity-85"
+            className="h-8 md:h-12 w-auto object-contain transition-opacity duration-300 hover:opacity-85"
           />
         </a>
-        <div className="hidden lg:flex gap-8 text-[11px] uppercase tracking-[0.2em] font-medium text-brand-primary">
+        <div className="hidden lg:flex gap-8 text-[11px] uppercase tracking-[0.2em] font-bold text-white drop-shadow-md">
           <a href="#about" className="hover:text-brand-accent transition-colors">{T.nav.about}</a>
           <a href="#gallery" className="hover:text-brand-accent transition-colors">{T.nav.gallery}</a>
           <a href="#booking" className="hover:text-brand-accent transition-colors">{T.nav.booking}</a>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           {/* Language Switcher */}
-          <div className="relative">
+          <div className="relative z-50">
             <button 
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-widest border border-brand-contrast/10 hover:bg-brand-contrast/5 transition-all rounded-sm"
+              className="flex items-center gap-1 md:gap-1.5 px-2 py-1 md:px-3 md:py-1.5 text-[9px] md:text-[10px] uppercase font-bold tracking-widest text-white drop-shadow-md border border-white/30 hover:bg-white/10 transition-all rounded-sm"
             >
-              <Globe size={12} className="opacity-50" />
+              <Globe size={10} className="md:w-3 md:h-3 opacity-90" />
               {lang}
               <ChevronDown size={10} className={`transition-transform duration-300 ${isLangMenuOpen ? "rotate-180" : ""}`} />
             </button>
@@ -408,7 +422,7 @@ export default function App() {
 
           <button 
             onClick={() => setIsBookingOpen(true)}
-            className="px-5 py-2 text-[10px] uppercase tracking-widest border border-brand-contrast/20 hover:bg-brand-contrast hover:text-brand-neutral transition-all duration-300"
+            className="px-3 py-1 md:px-5 md:py-2 text-[8px] md:text-[10px] uppercase font-bold tracking-widest text-white drop-shadow-md border border-white/30 hover:bg-white hover:text-brand-contrast transition-all duration-300 rounded-sm whitespace-nowrap"
           >
             {T.nav.reservations}
           </button>
@@ -418,10 +432,10 @@ export default function App() {
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div 
-          className="absolute inset-0 z-0 bg-fixed bg-cover bg-[center_60%] -rotate-2 scale-110"
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vh] h-[100vw] z-0 bg-cover bg-[center_40%] rotate-90 scale-105"
           style={{ backgroundImage: `url(${IMAGES.hero})` }}
         />
-        <div className="absolute inset-0 bg-black/20 z-0" />
+        <div className="fixed inset-0 bg-black/35 z-0" />
         
         <div className="relative z-10 text-center text-brand-neutral px-4">
           <motion.div
@@ -430,7 +444,7 @@ export default function App() {
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="mb-4"
           >
-            <span className="text-xs md:text-sm uppercase font-light tracking-[1em]">{T.hero.subtitle}</span>
+            <span className="text-xs md:text-sm uppercase font-light tracking-[1em] text-brand-primary">{T.hero.subtitle}</span>
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
@@ -467,6 +481,7 @@ export default function App() {
         </div>
       </section>
 
+      <main className="relative z-10 bg-brand-neutral">
       {/* About Section */}
       <section id="about" className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -557,9 +572,6 @@ export default function App() {
               <span className="text-[10px] uppercase tracking-[0.3em] text-brand-primary font-bold mb-4 block underline decoration-brand-accent underline-offset-8">{T.gallery.badge}</span>
               <h2 className="text-4xl md:text-5xl font-serif text-brand-contrast">{T.gallery.title}</h2>
             </div>
-            <p className="max-w-sm text-sm text-brand-contrast/70 leading-relaxed italic">
-              "{T.gallery.quote}"
-            </p>
           </div>
           
           <motion.div 
@@ -645,13 +657,6 @@ export default function App() {
               <p className="flex items-center gap-3 leading-relaxed"><MapPin size={14} className="shrink-0" /> Via Gardesana 21 30, Torri del Benaco, VR</p>
             </div>
           </div>
-          <div>
-            <h5 className="text-[10px] uppercase tracking-widest font-bold text-brand-primary mb-6">{T.footer.social}</h5>
-            <div className="space-y-3 text-xs font-light flex flex-col">
-              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><Instagram size={14} /> {T.footer.facebook}</a>
-              <a href="#" className="flex items-center gap-3 hover:text-brand-primary transition-colors"><Instagram size={14} /> {T.footer.instagram}</a>
-            </div>
-          </div>
         </div>
         <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-brand-neutral/10 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest opacity-40">
           <p>{T.footer.copyright}</p>
@@ -661,6 +666,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      </main>
 
       {/* Booking Modal */}
       <AnimatePresence>
@@ -771,6 +777,15 @@ export default function App() {
                           placeholder={T.modal.messagePlaceholder} 
                           className="w-full bg-brand-neutral border border-brand-accent/65 px-4 py-4 text-sm rounded-[8px] focus:outline-none focus:ring-1 focus:ring-brand-primary focus:border-brand-primary transition-all resize-none text-brand-contrast"
                         />
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 pb-2 border-t border-brand-accent/30">
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-brand-contrast">
+                          {T.modal.totalPrice}
+                        </span>
+                        <div className="text-2xl font-serif text-brand-contrast">
+                          € {parseInt(formData.guests || "1") * 50},00
+                        </div>
                       </div>
 
                       <button 
