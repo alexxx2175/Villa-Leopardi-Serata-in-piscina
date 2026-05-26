@@ -372,7 +372,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-neutral selection:bg-brand-primary selection:text-brand-neutral">
+    <div className="min-h-screen selection:bg-brand-primary selection:text-brand-neutral">
+      {/* Global Fixed Background */}
+      <div 
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vh] h-[100vw] z-[-2] bg-cover bg-[center_40%] rotate-90 scale-105"
+        style={{ backgroundImage: `url(${IMAGES.hero})` }}
+      />
+      <div className="fixed inset-0 bg-black/35 z-[-1]" />
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 md:px-6 py-4 bg-transparent">
         <a href="/" className="flex items-center">
@@ -431,11 +438,6 @@ export default function App() {
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div 
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vh] h-[100vw] z-0 bg-cover bg-[center_40%] rotate-90 scale-105"
-          style={{ backgroundImage: `url(${IMAGES.hero})` }}
-        />
-        <div className="fixed inset-0 bg-black/35 z-0" />
         
         <div className="relative z-10 text-center text-brand-neutral px-4">
           <motion.div
