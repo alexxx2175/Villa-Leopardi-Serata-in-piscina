@@ -617,8 +617,14 @@ async function startServer() {
     res.json({ success: true, message: "Richiesta ricevuta correttamente." });
   });
 
+  // Define isProduction robustly, checking NODE_ENV, file path, and index.html presence inside dist
+  const isProduction = 
+    process.env.NODE_ENV === "production" || 
+    !fs.existsSync(path.resolve(process.cwd(), "server.ts")) ||
+    (fs.existsSync(path.resolve(process.cwd(), "dist")) && fs.existsSync(path.resolve(process.cwd(), "dist/index.html")));
+
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -638,7 +644,11 @@ async function startServer() {
     });
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    // Serve static assets with standard caching headers (1 day cache max-age)
+    app.use(express.static(distPath, {
+      maxAge: "1d",
+      etag: true
+    }));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
