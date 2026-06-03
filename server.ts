@@ -617,11 +617,8 @@ async function startServer() {
     res.json({ success: true, message: "Richiesta ricevuta correttamente." });
   });
 
-  // Define isProduction robustly, checking NODE_ENV and file type running
-  const isProduction = 
-    process.env.NODE_ENV === "production" || 
-    (typeof __filename !== "undefined" && __filename.endsWith(".cjs")) ||
-    !fs.existsSync(path.resolve(process.cwd(), "server.ts"));
+  // Define isProduction robustly - in production mode by default unless explicitly in development mode
+  const isProduction = process.env.NODE_ENV !== "development";
 
   // Vite middleware for development
   if (!isProduction) {
