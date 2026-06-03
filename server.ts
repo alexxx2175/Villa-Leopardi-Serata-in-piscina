@@ -617,11 +617,11 @@ async function startServer() {
     res.json({ success: true, message: "Richiesta ricevuta correttamente." });
   });
 
-  // Define isProduction robustly, checking NODE_ENV, file path, and index.html presence inside dist
+  // Define isProduction robustly, checking NODE_ENV and file type running
   const isProduction = 
     process.env.NODE_ENV === "production" || 
-    !fs.existsSync(path.resolve(process.cwd(), "server.ts")) ||
-    (fs.existsSync(path.resolve(process.cwd(), "dist")) && fs.existsSync(path.resolve(process.cwd(), "dist/index.html")));
+    (typeof __filename !== "undefined" && __filename.endsWith(".cjs")) ||
+    !fs.existsSync(path.resolve(process.cwd(), "server.ts"));
 
   // Vite middleware for development
   if (!isProduction) {
@@ -644,13 +644,38 @@ async function startServer() {
     });
   } else {
     const distPath = path.join(process.cwd(), "dist");
+    const publicPath = path.join(process.cwd(), "public");
+
     // Serve static assets with standard caching headers (1 day cache max-age)
-    app.use(express.static(distPath, {
-      maxAge: "1d",
-      etag: true
-    }));
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath, {
+        maxAge: "1d",
+        etag: true
+      }));
+    }
+
+    // Serve public folder as fallback for raw static assets
+    if (fs.existsSync(publicPath)) {
+      app.use(express.static(publicPath, {
+        maxAge: "1d",
+        etag: true
+      }));
+    }
+
+    // SPA fallback: ONLY serve index.html for non-asset routes (paths without extension)
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      const ext = path.extname(req.path);
+      // If request has a file extension (like .png, .webp, .css, .js) but wasn't served by express.static, return 404.
+      // This is crucial: returning index.html (200 OK) for missing images causes browsers to cache the HTML as an image,
+      // resulting in broken image icons and slow image rendering.
+      if (ext && ext !== ".html") {
+        return res.status(404).send("Not Found");
+      }
+
+      const indexPath = fs.existsSync(distPath) 
+        ? path.join(distPath, "index.html") 
+        : path.join(process.cwd(), "index.html");
+      res.sendFile(indexPath);
     });
   }
 
