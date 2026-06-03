@@ -6,15 +6,14 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Camera, Calendar, MapPin, Music, Sunset, Star, ChevronDown, Mail, Phone, Users, X, Globe, Lock } from "lucide-react";
-import droneImage from "./assets/images/regenerated_image_1779188638766.png";
 
 const IMAGES = {
-  hero: "/piscinatramnoto.png",
-  aperitivo: "/ChatGPT Image 25 mag 2026, 19_11_43.png",
-  poolSide: "/poolside.jpg",
-  villa: "/villa.jpg",
-  party: "/party.jpg",
-  drone: droneImage,
+  hero: "/piscinatramnoto_opt.webp",
+  aperitivo: "/aperitivo_real_opt.webp",
+  poolSide: "/poolside_opt.webp",
+  villa: "/villa_opt.webp",
+  party: "/party_opt.webp",
+  paese: "/paese_opt.webp",
 };
 
 type Language = "IT" | "EN" | "DE";
@@ -101,7 +100,7 @@ const TRANSLATIONS = {
       { label: "Lounge Music", desc: "DJ Set & Vibrazioni" },
       { label: "Tramonto", desc: "Poolside View" },
       { label: "Esclusivo", desc: "Max 50 Posti" },
-      { label: "Data", desc: "20 Giugno 2026" },
+      { label: "Data", desc: "27 Giugno 2026" },
     ],
     gallery: {
       badge: "Visual Moments",
@@ -178,7 +177,7 @@ const TRANSLATIONS = {
       { label: "Lounge Music", desc: "DJ Set & Vibrations" },
       { label: "Sunset", desc: "Poolside View" },
       { label: "Exclusive", desc: "Max 50 Guests" },
-      { label: "Date", desc: "June 20th, 2026" },
+      { label: "Date", desc: "June 27th, 2026" },
     ],
     gallery: {
       badge: "Visual Moments",
@@ -255,7 +254,7 @@ const TRANSLATIONS = {
       { label: "Lounge Musik", desc: "DJ Set & Vibes" },
       { label: "Sonnenuntergang", desc: "Poolside View" },
       { label: "Exklusiv", desc: "Max. 50 Plätze" },
-      { label: "Datum", desc: "20. Juni 2026" },
+      { label: "Datum", desc: "27. Juni 2026" },
     ],
     gallery: {
       badge: "Visual Moments",
@@ -369,11 +368,46 @@ export default function App() {
       if (response.ok && data.url) {
         window.location.href = data.url;
       } else {
-        alert("Errore/Error/Fehler: " + (data.error || "Could not init checkout"));
+        console.warn("Stripe Checkout non configurato o fallito. Fallback su prenotazione diretta.");
+        // Fallback directly to simple booking request via email
+        const apiResponse = await fetch("/api/book", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+
+        if (apiResponse.ok) {
+          setSubmitted(true);
+          setTimeout(() => {
+            setIsBookingOpen(false);
+            setSubmitted(false);
+          }, 6000);
+        } else {
+          alert("Si è verificato un errore durante la prenotazione. Si prega di riprovare.");
+        }
         setIsSubmitting(false);
       }
     } catch (error) {
-      console.error("Error submitting booking:", error);
+      console.error("Error submitting booking, running direct booking fallback:", error);
+      try {
+        const apiResponse = await fetch("/api/book", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+
+        if (apiResponse.ok) {
+          setSubmitted(true);
+          setTimeout(() => {
+            setIsBookingOpen(false);
+            setSubmitted(false);
+          }, 6000);
+        } else {
+          alert("Impossibile contattare il server. Riprova più tardi.");
+        }
+      } catch (fallbackError) {
+        alert("Si è verificato un errore di rete.");
+      }
       setIsSubmitting(false);
     }
   };
@@ -397,7 +431,7 @@ export default function App() {
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vh] h-[100vw] z-[-2] bg-cover bg-[center_40%] rotate-90 scale-105"
         style={{ backgroundImage: `url(${IMAGES.hero})` }}
       />
-      <div className="fixed inset-0 bg-black/35 z-[-1]" />
+      <div className="fixed inset-0 bg-black/50 z-[-1]" />
 
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 md:px-6 py-4 bg-transparent">
@@ -408,7 +442,7 @@ export default function App() {
             className="h-8 md:h-12 w-auto object-contain transition-opacity duration-300 hover:opacity-85"
           />
         </a>
-        <div className="hidden lg:flex gap-8 text-[11px] uppercase tracking-[0.2em] font-bold text-white drop-shadow-md">
+        <div className="hidden lg:flex gap-8 text-[11px] uppercase tracking-[0.2em] font-bold text-brand-primary drop-shadow-md">
           <a href="#about" className="hover:text-brand-accent transition-colors">{T.nav.about}</a>
           <a href="#gallery" className="hover:text-brand-accent transition-colors">{T.nav.gallery}</a>
           <a href="#booking" className="hover:text-brand-accent transition-colors">{T.nav.booking}</a>
@@ -418,7 +452,7 @@ export default function App() {
           <div className="relative z-50">
             <button 
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-              className="flex items-center gap-1 md:gap-1.5 px-2 py-1 md:px-3 md:py-1.5 text-[9px] md:text-[10px] uppercase font-bold tracking-widest text-white drop-shadow-md border border-white/30 hover:bg-white/10 transition-all rounded-sm"
+              className="flex items-center gap-1 md:gap-1.5 px-2 py-1 md:px-3 md:py-1.5 text-[9px] md:text-[10px] uppercase font-bold tracking-widest text-brand-primary drop-shadow-md border border-brand-primary/30 hover:bg-brand-primary/10 transition-all rounded-sm"
             >
               <Globe size={10} className="md:w-3 md:h-3 opacity-90" />
               {lang}
@@ -448,7 +482,7 @@ export default function App() {
 
           <button 
             onClick={() => setIsBookingOpen(true)}
-            className="px-3 py-1 md:px-5 md:py-2 text-[8px] md:text-[10px] uppercase font-bold tracking-widest text-white drop-shadow-md border border-white/30 hover:bg-white hover:text-brand-contrast transition-all duration-300 rounded-sm whitespace-nowrap"
+            className="px-3 py-1 md:px-5 md:py-2 text-[8px] md:text-[10px] uppercase font-bold tracking-widest text-brand-primary drop-shadow-md border border-brand-primary/30 hover:bg-brand-primary hover:text-brand-contrast transition-all duration-300 rounded-sm whitespace-nowrap"
           >
             {T.nav.reservations}
           </button>
@@ -542,6 +576,7 @@ export default function App() {
                 src={IMAGES.aperitivo} 
                 alt="Luxury Aperitivo" 
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
               />
             </div>
             <div className="absolute -bottom-6 -left-6 bg-brand-primary p-8 text-brand-contrast w-52 shadow-xl rounded-[12px] border border-brand-accent/30 hidden md:block -rotate-3">
@@ -603,7 +638,7 @@ export default function App() {
             className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6"
           >
             <motion.div variants={fadeInUp} className="md:col-span-8 h-[250px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
-              <img src={IMAGES.drone} alt="Villa Overview" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" />
+              <img src={IMAGES.paese} alt="Lake Garda Village" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" referrerPolicy="no-referrer" />
             </motion.div>
             <motion.div variants={fadeInUp} className="md:col-span-4 h-[250px] md:h-[500px] overflow-hidden rounded-[12px] shadow-md border border-brand-accent/30">
               <img src={IMAGES.poolSide} alt="Pool Side" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" />
